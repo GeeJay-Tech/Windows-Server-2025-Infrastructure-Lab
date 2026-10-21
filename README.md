@@ -167,16 +167,16 @@ The screenshots below document policy configuration, client behaviour, file acce
 
 | # | Evidence | Screenshot |
 | --- | --- | --- |
-| 01 | Workstation GPO link | [Workstation policy link](screenshots/01-GPO-Workstation-Link.png) |
-| 02 | Account lockout settings in Group Policy | [GPO account lockout policy](screenshots/02-GPO-Account-Lockout-Policy.png) |
-| 03 | Policy application on CLIENT01 | [CLIENT01 applied GPO](screenshots/03-CLIENT01-GPO-Applied.png) |
-| 04 | Client account lockout verification | [CLIENT01 lockout verification](screenshots/04-CLIENT01-Account-Lockout-Verification.png) |
-| 05 | File share permission testing | [CLIENT01 share permissions](screenshots/05-CLIENT01-File-Share-Permissions.png) |
-| 06 | Finance drive mapping | [Finance mapped drive](screenshots/06-CLIENT01-Finance-Drive-Mapping.png) |
-| 07 | IT drive mapping | [IT mapped drive](screenshots/07-CLIENT01-IT-Drive-Mapping.png) |
-| 08 | Domain account lockout policy | [Domain lockout policy](screenshots/08-Domain-Account-Lockout-Policy.png) |
-| 09 | Cross-department access testing | [Cross-department access](screenshots/09-Shared-Folder-Cross-Department-Access.png) |
-| 10 | File-system auditing on FS01 | [FS01 local auditing evidence](screenshots/10-FS01-File-System-Auditing.png) |
+| 01 | Workstation GPO link | [Workstation policy link](01-GPO-Workstation-Link.png) |
+| 02 | Account lockout settings in Group Policy | [GPO account lockout policy](02-GPO-Account-Lockout-Policy.png) |
+| 03 | Policy application on CLIENT01 | [CLIENT01 applied GPO](03-CLIENT01-GPO-Applied.png) |
+| 04 | Client account lockout verification | [CLIENT01 lockout verification](04-CLIENT01-Account-Lockout-Verification.png) |
+| 05 | File share permission testing | [CLIENT01 share permissions](05-CLIENT01-File-Share-Permissions.png) |
+| 06 | Finance drive mapping | [Finance mapped drive](06-CLIENT01-Finance-Drive-Mapping.png) |
+| 07 | IT drive mapping | [IT mapped drive](07-CLIENT01-IT-Drive-Mapping.png) |
+| 08 | Domain account lockout policy | [Domain lockout policy](08-Domain-Account-Lockout-Policy.png) |
+| 09 | Cross-department access testing | [Cross-department access](09-Shared-Folder-Cross-Department-Access.png) |
+| 10 | File-system auditing on FS01 | [FS01 local auditing evidence](10-FS01-File-System-Auditing.png) |
 
 The auditing screenshot supports the local auditing exercise; it does not establish that the unresolved auditing GPO was fixed.
 
