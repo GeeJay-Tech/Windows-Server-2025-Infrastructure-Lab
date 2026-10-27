@@ -1,10 +1,11 @@
+
 # Windows Server 2025 Infrastructure Lab
 
 A hands-on infrastructure lab built in Hyper-V to practise Windows domain administration, network services, file access control and endpoint policy management. The environment connects Windows Server 2025 infrastructure with a domain-joined Windows 11 client on a private NAT network.
 
 The project demonstrates practical skills relevant to IT support, systems administration and infrastructure engineering: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy and investigating Windows Security events.
 
-**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 DNS registration issue has been resolved, with secure dynamic DNS registration successfully creating a record owned by the FS01 computer account. The file-server auditing GPO application issue has also been resolved. Independent verification of central audit-policy enforcement remains outstanding.
+**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are also complete, with Windows identifying `GPO-File-Server-Auditing` as the winning GPO for Audit File System. A separate local-policy override test has not been performed.
 
 ## At a glance
 
@@ -54,6 +55,7 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Configured domain password and account lockout policy.
 - Enabled local file-system auditing with `auditpol` and observed Security Event ID 4663.
 - Resolved a file-server auditing GPO application issue by correcting FS01's Active Directory OU placement.
+- Verified that `GPO-File-Server-Auditing` is the winning GPO for Audit File System on FS01 using Windows Group Policy Results.
 - Diagnosed and resolved secure dynamic DNS registration failure on FS01, including investigation of Event ID 8018 and DNS record permissions.
 
 ## Implementation notes and commands
@@ -145,7 +147,7 @@ Password and account lockout settings were configured at domain level. Their eff
 
 ### File access auditing
 
-Local auditing on FS01 was used to demonstrate file access events:
+Local auditing on FS01 was initially used to demonstrate file access events:
 
 ```powershell
 # Elevated shell on FS01; subcategory name assumes an English installation.
@@ -160,7 +162,7 @@ Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4663} -MaxEvents 10 |
 
 File auditing also requires an applicable auditing entry in the target object's SACL. With that entry in place, a matching file access operation can produce Event ID 4663 on FS01. The event should be checked for the account, object path and access performed.
 
-**Auditing status:** The GPO application issue on FS01 has been resolved. Event ID 4663 demonstrates the earlier local auditing test. Effective Success and Failure auditing remains enabled following a Group Policy refresh, but central enforcement has not yet been independently isolated from the previous local configuration.
+**Auditing status:** The GPO application issue on FS01 has been resolved. Windows Group Policy Results identifies `GPO-File-Server-Auditing` as the winning GPO for Audit File System, configured for Success and Failure. The effective audit policy also reports Success and Failure. A separate local-policy override test was not performed.
 
 ## Validation evidence
 
@@ -176,11 +178,11 @@ The lab exercises cover the following outcomes. Commands are provided so that th
 | User access | Test each user's permitted access and denial outside the intended permissions |
 | Workstation policy and drive mapping | `gpresult /r`, visible workstation settings and mapped drives in the user's session |
 | Password and lockout policy | Effective domain settings from `Get-ADDefaultDomainPasswordPolicy` |
-| File auditing | Local `auditpol` output, FS01 Security Event ID 4663 and applied auditing GPO |
+| File auditing | FS01 Security Event ID 4663, `auditpol` output and Group Policy Results identifying `GPO-File-Server-Auditing` as the winning GPO |
 
 ### Screenshots
 
-The screenshots below document policy configuration, client behaviour, file access and the local auditing test.
+The screenshots below document policy configuration, client behaviour, file access, local auditing and central Group Policy verification.
 
 | # | Evidence | Screenshot |
 | --- | --- | --- |
@@ -194,8 +196,9 @@ The screenshots below document policy configuration, client behaviour, file acce
 | 08 | Domain account lockout policy | [Domain lockout policy](08-Domain-Account-Lockout-Policy.png) |
 | 09 | Cross-department access testing | [Cross-department access](09-Shared-Folder-Cross-Department-Access.png) |
 | 10 | File-system auditing on FS01 | [FS01 local auditing evidence](10-FS01-File-System-Auditing.png) |
+| 11 | FS01 Group Policy Results: Audit File System, Success and Failure, winning auditing GPO | [FS01 GPO auditing verification](11-FS01-GPO-Auditing-Verification.png) |
 
-The auditing screenshot documents the original local auditing test. Subsequent troubleshooting resolved the auditing GPO application issue on FS01.
+Screenshot 10 documents the original local auditing test. Screenshot 11 provides evidence that Windows identifies `GPO-File-Server-Auditing` as the winning GPO for Audit File System on FS01.
 
 ## Troubleshooting
 
@@ -246,7 +249,7 @@ Automatic DNS registration was successfully restored for FS01. The investigation
 
 **Skills demonstrated:** Windows Server DNS, secure dynamic updates, Active Directory security permissions, Windows Event Viewer, PowerShell and infrastructure troubleshooting.
 
-### Auditing Group Policy: GPO Application Issue Resolved (27 October 2026)
+### Auditing Group Policy: Application and Winning Policy Verified (27 October 2026)
 
 **Issue identified**
 
@@ -276,33 +279,47 @@ gpupdate /force
 
 - Confirmed FS01 was now located in the Servers OU.
 - Used `gpresult /r /scope computer` to confirm that `GPO-File-Server-Auditing` appeared under Applied Group Policy Objects.
-- Generated and inspected an HTML GPO report on DC01, confirming that Audit File System was configured for Success and Failure.
-- Ran `auditpol /get /subcategory:"File System"` on FS01 and confirmed that Success and Failure auditing remained enabled after another Group Policy refresh.
+- Inspected the GPO's `audit.csv` file in SYSVOL, confirming Audit File System was configured for Success and Failure, with setting value `3`.
+- Inspected FS01's local audit policy file and confirmed it contained the matching Audit File System configuration.
+- Ran `auditpol /get /subcategory:"File System" /r` on FS01 and confirmed effective Success and Failure auditing.
+- Generated a Windows Group Policy Results HTML report using:
+
+```powershell
+gpresult /h "C:\Windows\Temp\FS01-GPO-Report.html" /scope computer /f
+```
+
+- Confirmed that `GPO-File-Server-Auditing` appeared under Applied Group Policy Objects in the report.
+- Confirmed **Audit File System: Success, Failure** under Advanced Audit Policy Configuration.
+- Confirmed that the report identified **GPO-File-Server-Auditing** as the **Winning GPO**.
+- Captured screenshot 11 as supporting evidence.
 
 **Outcome**
 
-The original GPO application issue was successfully resolved by correcting FS01's Active Directory OU placement.
+The GPO application issue was resolved by correcting FS01's Active Directory OU placement.
 
-File-system auditing is enabled and remains effective following a Group Policy refresh. However, because auditing had previously been enabled locally using `auditpol`, independent verification that the GPO alone enforces these settings remains outstanding.
+Subsequent Windows Group Policy Results verification identified `GPO-File-Server-Auditing` as the winning GPO for the Audit File System setting. The centrally configured policy and FS01's effective audit settings both specify Success and Failure.
 
-**Skills demonstrated:** Active Directory administration, OU management, Group Policy troubleshooting, PowerShell, audit policy configuration and validation.
+This completes the GPO application and winning-policy verification. A separate test removing or overriding the earlier local audit configuration was not performed.
+
+**Skills demonstrated:** Active Directory administration, OU management, Group Policy troubleshooting, PowerShell, Advanced Audit Policy Configuration, Resultant Set of Policy reporting and evidence-based validation.
 
 ## Lessons learned
 
 - **DNS is a dependency to verify early.** An IP connection can work while access by hostname fails. Inspecting the record and testing directly against DC01 makes the fault easier to isolate.
 - **Secure dynamic DNS updates depend on record permissions.** A manually created DNS record may resolve correctly while preventing the associated computer account from updating it. Event ID 8018, effective permission checks and DNS record ownership helped identify and resolve the issue.
 - **Configured policy and effective policy are different evidence.** A setting visible in a GPO needs confirmation on the target computer and in the correct user or computer context.
+- **The Winning GPO provides valuable troubleshooting evidence.** Group Policy Results can identify which GPO Windows reports as responsible for a configured setting, providing stronger evidence than simply checking that a GPO appears in the applied list.
 - **File access involves several controls.** Domain group membership, share permissions and NTFS permissions all contribute to the final result. Testing as each user is essential.
-- **Auditing requires both policy and an object auditing entry.** A local success is useful evidence, but central policy deployment needs its own validation.
-- **Document workarounds and resolutions honestly.** Temporary fixes can restore functionality, but investigating their underlying causes provides stronger evidence of troubleshooting ability. Outstanding validation should remain documented until independently confirmed.
+- **Auditing requires both policy and an object auditing entry.** Audit policy configuration and SACL entries serve different purposes, and both are relevant when validating file access events.
+- **Document workarounds and resolutions honestly.** Temporary fixes can restore functionality, but investigating their underlying causes provides stronger evidence of troubleshooting ability. Verification results should be recorded accurately without claiming tests that were not performed.
 
 ## Next steps
 
-- Independently validate central enforcement of file-system auditing on FS01, distinguishing it from previously configured local auditing settings.
-- Capture before-and-after access tests and policy reports for repeatable validation.
+- Capture additional before-and-after access tests and policy reports for repeatable validation.
 - Record exact OU names, group memberships, permission entries and policy values alongside future build automation.
 - Continue developing PowerShell-based infrastructure administration and automation exercises.
+- Expand infrastructure monitoring, troubleshooting and operational validation scenarios.
 
 ---
 
-This is a learning lab and portfolio project. Its scope is a small Windows domain with documented implementation decisions, validation methods, resolved troubleshooting issues and clearly identified remaining work.
+This is a learning lab and portfolio project. Its scope is a small Windows domain with documented implementation decisions, validation methods and resolved troubleshooting issues.
