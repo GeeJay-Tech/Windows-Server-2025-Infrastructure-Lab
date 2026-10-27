@@ -2,9 +2,9 @@
 
 A hands-on infrastructure lab built in Hyper-V to practise Windows domain administration, network services, file access control and endpoint policy management. The environment connects Windows Server 2025 infrastructure with a domain-joined Windows 11 client on a private NAT network.
 
-The project demonstrates practical skills relevant to IT support and junior systems administration: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy and investigating Windows Security events.
+The project demonstrates practical skills relevant to IT support, systems administration and infrastructure engineering: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy and investigating Windows Security events.
 
-**Current status:** Core domain, networking, file services and policy exercises are implemented. File access auditing was demonstrated through Security event **4663**. The auditing GPO application issue was resolved by moving FS01 into the correct Active Directory OU. The auditing settings remain enabled following a Group Policy refresh, although independent verification of central enforcement remains outstanding.
+**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 DNS registration issue has been resolved, with secure dynamic DNS registration successfully creating a record owned by the FS01 computer account. The file-server auditing GPO application issue has also been resolved. Independent verification of central audit-policy enforcement remains outstanding.
 
 ## At a glance
 
@@ -23,22 +23,22 @@ The project demonstrates practical skills relevant to IT support and junior syst
 ```text
                       External network
                              |
-                       Hyper-V host
+                        Hyper-V host
                              |
-                  NAT gateway: 192.168.100.1
+                   NAT gateway: 192.168.100.1
                              |
-             Lab virtual network: 192.168.100.0/24
+              Lab virtual network: 192.168.100.0/24
                              |
-          +------------------+------------------+
-          |                  |                  |
-        DC01               FS01              CLIENT01
-   192.168.100.2       192.168.100.3         DHCP address
-   Windows Server     Windows Server        Windows 11
-   2025               2025
-   AD DS / DNS /      SMB file services     Domain sign-in
-   DHCP                                   Mapped drives
-          |                  |                  |
-          +---------- CTRL-TECH.net ------------+
+           +------------------+------------------+
+           |                  |                  |
+         DC01               FS01              CLIENT01
+    192.168.100.2       192.168.100.3         DHCP address
+    Windows Server     Windows Server        Windows 11
+    2025               2025
+    AD DS / DNS /      SMB file services     Domain sign-in
+    DHCP                                   Mapped drives
+           |                  |                  |
+           +---------- CTRL-TECH.net ------------+
 ```
 
 DC01 provides domain identity, internal name resolution and client address allocation. FS01 hosts shared folders, with access assigned through domain groups. CLIENT01 provides the user-facing test environment for domain sign-in, policy application and mapped drives.
@@ -52,8 +52,9 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Configured SMB shares on FS01 and exercised group-based share and NTFS permissions.
 - Configured workstation security through Group Policy and mapped network drives for domain users.
 - Configured domain password and account lockout policy.
-- Enabled local file-system auditing with `auditpol` and observed event 4663.
-- Investigated name resolution and policy application issues, recording both the workaround and the remaining limitation.
+- Enabled local file-system auditing with `auditpol` and observed Security Event ID 4663.
+- Resolved a file-server auditing GPO application issue by correcting FS01's Active Directory OU placement.
+- Diagnosed and resolved secure dynamic DNS registration failure on FS01, including investigation of Event ID 8018 and DNS record permissions.
 
 ## Implementation notes and commands
 
@@ -66,9 +67,12 @@ On the Hyper-V host, the following illustrates creating an internal switch, assi
 ```powershell
 # Run in elevated PowerShell on the Hyper-V host.
 # LabNAT is an example switch/NAT name.
+
 New-VMSwitch -Name 'LabNAT' -SwitchType Internal
+
 New-NetIPAddress -InterfaceAlias 'vEthernet (LabNAT)' `
     -IPAddress 192.168.100.1 -PrefixLength 24
+
 New-NetNat -Name 'LabNAT' `
     -InternalIPInterfaceAddressPrefix '192.168.100.0/24'
 
@@ -84,6 +88,7 @@ On a fresh DC01, the core role installation and forest creation can be expressed
 
 ```powershell
 Install-WindowsFeature AD-Domain-Services, DNS, DHCP -IncludeManagementTools
+
 Install-ADDSForest -DomainName 'CTRL-TECH.net' -InstallDns
 ```
 
@@ -93,9 +98,16 @@ Inspect the configured services and directory structure on DC01:
 
 ```powershell
 Get-ADDomain
-Get-ADOrganizationalUnit -Filter * | Select-Object Name, DistinguishedName
-Get-ADUser -Filter * | Select-Object Name, Enabled
-Get-ADGroup -Filter * | Select-Object Name, GroupScope, GroupCategory
+
+Get-ADOrganizationalUnit -Filter * |
+    Select-Object Name, DistinguishedName
+
+Get-ADUser -Filter * |
+    Select-Object Name, Enabled
+
+Get-ADGroup -Filter * |
+    Select-Object Name, GroupScope, GroupCategory
+
 Get-DhcpServerInDC
 Get-DhcpServerv4Scope
 Get-DhcpServerv4OptionValue
@@ -114,12 +126,15 @@ The file access exercise combines SMB share permissions with NTFS permissions. G
 
 ```powershell
 # FS01: inspect published shares and their access entries.
+
 Get-SmbShare | Where-Object Special -eq $false
+
 # Substitute an actual share name before running:
 # Get-SmbShareAccess -Name '<share-name>'
 # Get-Acl -Path '<shared-folder-path>' | Format-List
 
 # CLIENT01: refresh policy and inspect the signed-in user's context.
+
 gpupdate /force
 gpresult /r
 whoami /groups
@@ -134,16 +149,18 @@ Local auditing on FS01 was used to demonstrate file access events:
 
 ```powershell
 # Elevated shell on FS01; subcategory name assumes an English installation.
+
 auditpol /set /subcategory:"File System" /success:enable /failure:enable
+
 auditpol /get /subcategory:"File System"
 
 Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4663} -MaxEvents 10 |
     Select-Object TimeCreated, Id, Message
 ```
 
-File auditing also requires an applicable auditing entry in the target object's SACL. With that entry in place, a matching file access operation can produce event 4663 on FS01. The event should be checked for the account, object path and access performed.
+File auditing also requires an applicable auditing entry in the target object's SACL. With that entry in place, a matching file access operation can produce Event ID 4663 on FS01. The event should be checked for the account, object path and access performed.
 
-Auditing status: The GPO application issue on FS01 has been resolved. Event 4663 demonstrates the earlier local auditing test. Effective Success and Failure auditing remains enabled following a Group Policy refresh, but central enforcement has not yet been independently isolated from the previous local configuration.
+**Auditing status:** The GPO application issue on FS01 has been resolved. Event ID 4663 demonstrates the earlier local auditing test. Effective Success and Failure auditing remains enabled following a Group Policy refresh, but central enforcement has not yet been independently isolated from the previous local configuration.
 
 ## Validation evidence
 
@@ -154,12 +171,12 @@ The lab exercises cover the following outcomes. Commands are provided so that th
 | Network configuration | Static addresses on DC01/FS01; DHCP lease, gateway and DNS on CLIENT01 using `ipconfig /all` |
 | Domain services | `Get-ADDomain`, OU structure, test users and security groups |
 | DHCP | Active scope, options and CLIENT01 lease using `Get-DhcpServerv4Lease -ScopeId 192.168.100.0` on DC01 |
-| DNS | FS01 resolves to `192.168.100.3` using `Resolve-DnsName FS01.CTRL-TECH.net -Server 192.168.100.2` |
+| DNS | FS01 A record registered automatically in the `ctrl-tech.net` zone, owned by `CTRL-TECH\FS01$`; resolution can be checked using `Resolve-DnsName FS01.CTRL-TECH.net -Server 192.168.100.2` |
 | SMB connectivity | `Test-NetConnection FS01.CTRL-TECH.net -Port 445` from CLIENT01 |
 | User access | Test each user's permitted access and denial outside the intended permissions |
 | Workstation policy and drive mapping | `gpresult /r`, visible workstation settings and mapped drives in the user's session |
 | Password and lockout policy | Effective domain settings from `Get-ADDefaultDomainPasswordPolicy` |
-| File auditing | Local `auditpol` output and FS01 Security event 4663 |
+| File auditing | Local `auditpol` output, FS01 Security Event ID 4663 and applied auditing GPO |
 
 ### Screenshots
 
@@ -182,22 +199,52 @@ The auditing screenshot documents the original local auditing test. Subsequent t
 
 ## Troubleshooting
 
-### FS01 name resolution: manual DNS repair
+### FS01 DNS Registration: Secure Dynamic Update Issue Resolved (27 October 2026)
 
-FS01 required a manual DNS A-record fix. An A record for **FS01 → 192.168.100.3** was added in the `CTRL-TECH.net` forward lookup zone on DC01. This addressed the missing name-to-address mapping; it does not prove that automatic DNS registration was repaired.
+**Issue identified**
 
-An equivalent command, if the record is absent, is:
+FS01 was unable to register its DNS A record automatically in the `ctrl-tech.net` DNS zone. A record had previously been created manually on DC01 to restore hostname resolution.
+
+Although the manually created record allowed hostname resolution, it did not resolve the underlying dynamic DNS registration problem.
+
+**Investigation**
+
+Examined the Windows System event log on FS01 and identified **DNS Client Event ID 8018**, reporting that the DNS server had refused the dynamic update request.
+
+The event confirmed that FS01 was attempting to register its hostname and IP address with DC01 (`192.168.100.2`).
+
+Further investigation established that:
+
+- The DNS zone was configured to allow **Secure** dynamic updates.
+- The existing FS01 A record had been created manually.
+- The existing record had no timestamp displayed.
+- The `CTRL-TECH\FS01$` computer account did not have effective write permissions on the existing record.
+
+**Root cause**
+
+The evidence strongly indicated that the manually created DNS record's permissions were preventing FS01 from updating its own record through secure dynamic DNS.
+
+**Resolution**
+
+Removed the existing manually created FS01 A record from the `ctrl-tech.net` forward lookup zone on DC01.
+
+On FS01, initiated dynamic DNS registration:
 
 ```powershell
-# DC01: inspect first to avoid adding a duplicate record.
-Get-DnsServerResourceRecord -ZoneName 'CTRL-TECH.net' -Name 'FS01' -RRType A
-
-# Run only if the required record is absent.
-Add-DnsServerResourceRecordA -ZoneName 'CTRL-TECH.net' `
-    -Name 'FS01' -IPv4Address '192.168.100.3'
-
-Resolve-DnsName FS01.CTRL-TECH.net -Server 192.168.100.2
+ipconfig /registerdns
 ```
+
+**Validation**
+
+- Refreshed DNS Manager on DC01 and confirmed that a new FS01 A record had been created automatically.
+- Verified that the new DNS record was owned by `CTRL-TECH\FS01$`, rather than the administrator account.
+- Confirmed that FS01 could register its own DNS record without manually recreating it.
+
+**Outcome**
+
+Automatic DNS registration was successfully restored for FS01. The investigation demonstrated how DNS record permissions and Active Directory computer accounts interact with secure dynamic DNS updates.
+
+**Skills demonstrated:** Windows Server DNS, secure dynamic updates, Active Directory security permissions, Windows Event Viewer, PowerShell and infrastructure troubleshooting.
 
 ### Auditing Group Policy: GPO Application Issue Resolved (27 October 2026)
 
@@ -215,12 +262,9 @@ The auditing GPO was linked to `OU=Servers,OU=CTRLTECH,DC=ctrl-tech,DC=net`, but
 
 On DC01, moved the FS01 computer account into the existing Servers OU using PowerShell:
 
-Independently validate central enforcement of file-system auditing on FS01, distinguishing it from previously configured local auditing settings.
-
+```powershell
 Move-ADObject -Identity "CN=FS01,CN=Computers,DC=ctrl-tech,DC=net" -TargetPath "OU=Servers,OU=CTRLTECH,DC=ctrl-tech,DC=net"
 ```
-
-This is a learning lab and portfolio project. Its scope is a small Windows domain with documented implementation decisions, validation methods, resolved troubleshooting issues and clearly identified remaining work.
 
 On FS01, refreshed Group Policy:
 
@@ -246,16 +290,19 @@ File-system auditing is enabled and remains effective following a Group Policy r
 ## Lessons learned
 
 - **DNS is a dependency to verify early.** An IP connection can work while access by hostname fails. Inspecting the record and testing directly against DC01 makes the fault easier to isolate.
+- **Secure dynamic DNS updates depend on record permissions.** A manually created DNS record may resolve correctly while preventing the associated computer account from updating it. Event ID 8018, effective permission checks and DNS record ownership helped identify and resolve the issue.
 - **Configured policy and effective policy are different evidence.** A setting visible in a GPO needs confirmation on the target computer and in the correct user or computer context.
 - **File access involves several controls.** Domain group membership, share permissions and NTFS permissions all contribute to the final result. Testing as each user is essential.
 - **Auditing requires both policy and an object auditing entry.** A local success is useful evidence, but central policy deployment needs its own validation.
-- **Document workarounds honestly.** The manual DNS record and local auditing configuration demonstrate troubleshooting while preserving a clear record of remaining work.
+- **Document workarounds and resolutions honestly.** Temporary fixes can restore functionality, but investigating their underlying causes provides stronger evidence of troubleshooting ability. Outstanding validation should remain documented until independently confirmed.
 
 ## Next steps
 
-- Resolve and validate central auditing policy on FS01.
-- Investigate FS01 automatic DNS registration so the manual record is not the only documented remedy.
+- Independently validate central enforcement of file-system auditing on FS01, distinguishing it from previously configured local auditing settings.
 - Capture before-and-after access tests and policy reports for repeatable validation.
 - Record exact OU names, group memberships, permission entries and policy values alongside future build automation.
+- Continue developing PowerShell-based infrastructure administration and automation exercises.
 
-This is a learning lab and portfolio project. Its scope is a small Windows domain with documented implementation decisions, validation methods and an openly tracked policy issue.
+---
+
+This is a learning lab and portfolio project. Its scope is a small Windows domain with documented implementation decisions, validation methods, resolved troubleshooting issues and clearly identified remaining work.
