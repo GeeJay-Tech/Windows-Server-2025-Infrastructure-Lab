@@ -4,7 +4,7 @@ A hands-on infrastructure lab built in Hyper-V to practise Windows domain admini
 
 The project demonstrates practical skills relevant to IT support and junior systems administration: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy and investigating Windows Security events.
 
-**Current status:** Core domain, networking, file services and policy exercises are implemented. File access auditing was demonstrated using local `auditpol` configuration and Security event **4663**. Central deployment of the auditing settings through Group Policy remains unresolved.
+**Current status:** Core domain, networking, file services and policy exercises are implemented. File access auditing was demonstrated through Security event **4663**. The auditing GPO application issue was resolved by moving FS01 into the correct Active Directory OU. The auditing settings remain enabled following a Group Policy refresh, although independent verification of central enforcement remains outstanding.
 
 ## At a glance
 
@@ -143,7 +143,7 @@ Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4663} -MaxEvents 10 |
 
 File auditing also requires an applicable auditing entry in the target object's SACL. With that entry in place, a matching file access operation can produce event 4663 on FS01. The event should be checked for the account, object path and access performed.
 
-**Known limitation:** Event 4663 demonstrates the local auditing test. It does not establish successful deployment of the auditing configuration through domain Group Policy. That GPO issue remains open, and the local configuration is documented as a workaround.
+Auditing status: The GPO application issue on FS01 has been resolved. Event 4663 demonstrates the earlier local auditing test. Effective Success and Failure auditing remains enabled following a Group Policy refresh, but central enforcement has not yet been independently isolated from the previous local configuration.
 
 ## Validation evidence
 
@@ -178,7 +178,7 @@ The screenshots below document policy configuration, client behaviour, file acce
 | 09 | Cross-department access testing | [Cross-department access](09-Shared-Folder-Cross-Department-Access.png) |
 | 10 | File-system auditing on FS01 | [FS01 local auditing evidence](10-FS01-File-System-Auditing.png) |
 
-The auditing screenshot supports the local auditing exercise; it does not establish that the unresolved auditing GPO was fixed.
+The auditing screenshot documents the original local auditing test. Subsequent troubleshooting resolved the auditing GPO application issue on FS01.
 
 ## Troubleshooting
 
@@ -199,11 +199,49 @@ Add-DnsServerResourceRecordA -ZoneName 'CTRL-TECH.net' `
 Resolve-DnsName FS01.CTRL-TECH.net -Server 192.168.100.2
 ```
 
-### Auditing Group Policy: unresolved
+### Auditing Group Policy: GPO Application Issue Resolved (27 October 2026)
 
-The intended auditing settings were not successfully established through Group Policy. Local `auditpol` configuration enabled the auditing test and produced event 4663, but central enforcement remains unverified.
+**Issue identified**
 
-Further investigation should compare the GPO's configured settings with FS01's effective policy: check computer OU placement, the GPO link, security filtering and the computer's resultant policy report. Then compare `auditpol /get` output before and after policy refresh, including any interaction between basic and advanced audit policy settings. These are investigation steps, not completed fixes.
+The `GPO-File-Server-Auditing` policy was not applying to FS01, despite the GPO already existing and being configured for file-system auditing.
+
+Investigation using `gpresult /r /scope computer` revealed that FS01 was located in the default Active Directory `CN=Computers` container rather than the dedicated Servers OU.
+
+**Root cause**
+
+The auditing GPO was linked to `OU=Servers,OU=CTRLTECH,DC=ctrl-tech,DC=net`, but FS01 was outside that OU. Consequently, the server was not within the scope of the GPO link.
+
+**Resolution**
+
+On DC01, moved the FS01 computer account into the existing Servers OU using PowerShell:
+
+Independently validate central enforcement of file-system auditing on FS01, distinguishing it from previously configured local auditing settings.
+
+Move-ADObject -Identity "CN=FS01,CN=Computers,DC=ctrl-tech,DC=net" -TargetPath "OU=Servers,OU=CTRLTECH,DC=ctrl-tech,DC=net"
+```
+
+This is a learning lab and portfolio project. Its scope is a small Windows domain with documented implementation decisions, validation methods, resolved troubleshooting issues and clearly identified remaining work.
+
+On FS01, refreshed Group Policy:
+
+```powershell
+gpupdate /force
+```
+
+**Validation**
+
+- Confirmed FS01 was now located in the Servers OU.
+- Used `gpresult /r /scope computer` to confirm that `GPO-File-Server-Auditing` appeared under Applied Group Policy Objects.
+- Generated and inspected an HTML GPO report on DC01, confirming that Audit File System was configured for Success and Failure.
+- Ran `auditpol /get /subcategory:"File System"` on FS01 and confirmed that Success and Failure auditing remained enabled after another Group Policy refresh.
+
+**Outcome**
+
+The original GPO application issue was successfully resolved by correcting FS01's Active Directory OU placement.
+
+File-system auditing is enabled and remains effective following a Group Policy refresh. However, because auditing had previously been enabled locally using `auditpol`, independent verification that the GPO alone enforces these settings remains outstanding.
+
+**Skills demonstrated:** Active Directory administration, OU management, Group Policy troubleshooting, PowerShell, audit policy configuration and validation.
 
 ## Lessons learned
 
