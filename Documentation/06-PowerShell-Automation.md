@@ -335,7 +335,7 @@ foreach ($ServiceName in $Services) {
         Write-Host "FS01 - $($Service.DisplayName): $($Service.Status)"
     }
     catch {
-        Write-Host "FS01 - Unable to check $ServiceName\`: $($_.Exception.Message)"
+        Write-Host "FS01 - Unable to check ${ServiceName}: $($_.Exception.Message)"
     }
 }
 ```
