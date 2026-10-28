@@ -4,7 +4,7 @@ A hands-on infrastructure lab built in Hyper-V to practise Windows domain admini
 
 The project demonstrates practical skills relevant to IT support, systems administration and infrastructure engineering: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy, investigating Windows Security events and developing PowerShell automation.
 
-**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Session 1 is complete, including basic server connectivity checks, remote service checks and a reusable health-check script.
+**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Sessions 1 and 2 are complete. The reusable Session 1 health-check script is available, and Session 2 documents interactive error handling, multi-service checks, structured reporting and CSV export/import.
 
 ## At a glance
 
@@ -60,6 +60,8 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Used arrays, variables, `foreach` loops and conditional statements to automate server checks.
 - Used PowerShell to inspect Windows services locally and remotely.
 - Created a reusable `Test-ServerHealth` function to check server connectivity and the Windows Server service.
+- Practised `try/catch` error handling, multi-service monitoring, PowerShell custom objects and filtering.
+- Generated, exported and re-imported a CSV health report from live FS01 service checks.
 - Saved the health-check automation as a `.ps1` script for reuse and further development.
 
 ## Explore the documentation
@@ -73,7 +75,7 @@ The detailed implementation commands, troubleshooting investigations, validation
 | Domain membership, file shares and permissions | [03 — File Server Permissions](Documentation/03-File-Server-Permissions.md) |
 | Group Policy and file access auditing | [04 — Group Policy and Auditing](Documentation/04-Group-Policy-Auditing.md) |
 | Resolved DNS and GPO incidents | [05 — Troubleshooting](Documentation/05-Troubleshooting.md) |
-| PowerShell Automation Session 1 | [06 — PowerShell Automation](Documentation/06-PowerShell-Automation.md) |
+| PowerShell Automation Sessions 1–2 | [06 — PowerShell Automation](Documentation/06-PowerShell-Automation.md) |
 | Screenshots and validation checklist | [07 — Validation Evidence](Documentation/07-Validation-Evidence.md) |
 | Lessons learned and planned work | [08 — Lessons Learned](Documentation/08-Lessons-Learned.md) |
 
