@@ -301,11 +301,119 @@ These limitations will be addressed progressively in future automation sessions.
 - Basic infrastructure automation
 - Operational validation and troubleshooting
 
-### Session 2 — Planned Improvements
+### Session 2 — Error Handling and Service Reporting (28 October 2026)
 
-- Introduce `try` and `catch` error handling.
-- Improve handling of unreachable servers and remote service failures.
-- Check additional Windows services.
-- Develop structured output using PowerShell objects.
-- Generate reusable reports.
-- Continue developing automation relevant to infrastructure engineering and systems administration.
+**Objective:** Extend the interactive PowerShell exercises from Session 1 with error handling, multi-service checks, structured results, filtering, and CSV reporting. These exercises were performed interactively on DC01; the existing [Test-ServerHealth.ps1](../PowerShell/Test-ServerHealth.ps1) file has **not** yet been rewritten to include these improvements.
+
+#### Task 1 — Handling service-query errors
+
+Successfully queried the Server service on FS01 with `Get-Service -ComputerName FS01 -Name LanmanServer -ErrorAction Stop`. Then deliberately requested a nonexistent service to exercise `try/catch`:
+
+```powershell
+try {
+    Get-Service -ComputerName FS01 -Name FakeService123 -ErrorAction Stop
+}
+catch {
+    Write-Host "The service check failed: $($_.Exception.Message)"
+}
+```
+
+Observed message: `The service check failed: Cannot find any service with service name 'FakeService123'.`
+
+The error was intentional; no service was modified. `-ErrorAction Stop` makes non-terminating command errors catchable in this scenario.
+
+#### Task 2 — Check multiple services remotely
+
+Used an array and `foreach` loop with an independent `try/catch` per service:
+
+```powershell
+$Services = @("LanmanServer", "WinRM")
+
+foreach ($ServiceName in $Services) {
+    try {
+        $Service = Get-Service -ComputerName FS01 -Name $ServiceName -ErrorAction Stop
+        Write-Host "FS01 - $($Service.DisplayName): $($Service.Status)"
+    }
+    catch {
+        Write-Host "FS01 - Unable to check $ServiceName\`: $($_.Exception.Message)"
+    }
+}
+```
+
+**Observed live results on FS01:**
+
+| Service | Display name | Status |
+| --- | --- | --- |
+| `LanmanServer` | Server | Running |
+| `WinRM` | Windows Remote Management (WS-Management) | Running |
+
+A service reporting `Running` does not alone prove its dependent functionality works; access, networking, permissions, and application-level checks may still be required.
+
+#### Task 3 — Custom objects and filtering
+
+Created a `[PSCustomObject]` with `Server`, `Service`, and `Status` properties, retrieved `$Result.Status` (returned `Running`), and inspected the object with `$Result | Get-Member`. The live status property was a `ServiceControllerStatus` value.
+
+Practised `Where-Object` filters with `-eq 'Running'` and `-ne 'Running'`. A separate **simulated** dataset contained DNS (Running), Server (Running), and WinRM (Stopped); filtering identified WinRM. **The simulated stopped state was not an actual change to FS01.**
+
+**Windows PowerShell 5.1 observation:** With a single matching `PSCustomObject`, the expression `($HealthResults | Where-Object { $_.Status -ne 'Running' }).Count` produced no output in this lab. Wrapping the pipeline in an array expression worked reliably:
+
+```powershell
+@($HealthResults | Where-Object { $_.Status -ne 'Running' }).Count
+```
+
+Observed count: `1`. Using `@(...)` is a consistent way to count zero, one, or multiple filtered objects.
+
+#### Task 4 — Collect real service results as objects
+
+Built a report from live remote service queries:
+
+```powershell
+$Services = @("LanmanServer", "WinRM")
+
+$HealthReport = foreach ($ServiceName in $Services) {
+    try {
+        $Service = Get-Service -ComputerName FS01 -Name $ServiceName -ErrorAction Stop
+
+        [PSCustomObject]@{
+            Server  = "FS01"
+            Service = $Service.DisplayName
+            Status  = $Service.Status
+        }
+    }
+    catch {
+        [PSCustomObject]@{
+            Server  = "FS01"
+            Service = $ServiceName
+            Status  = "Check Failed"
+        }
+    }
+}
+
+$HealthReport
+```
+
+Observed both FS01 services as `Running`. The `catch` branch records a failed query as `Check Failed`; it does not determine the underlying cause or establish that the service itself is stopped.
+
+#### Task 5 — Export, inspect, import, and filter CSV
+
+Exported the report on DC01:
+
+```powershell
+$HealthReport | Export-Csv -Path "$env:USERPROFILE\Desktop\FS01-HealthReport.csv" -NoTypeInformation
+```
+
+Confirmed the CSV appeared on the desktop and opened it in Notepad (Microsoft 365 was not required). Imported the file back into PowerShell:
+
+```powershell
+$ImportedReport = Import-Csv -Path "$env:USERPROFILE\Desktop\FS01-HealthReport.csv"
+$ImportedReport
+$ImportedReport | Where-Object { $_.Status -ne 'Running' }
+```
+
+The imported report displayed both FS01 services as `Running`. Filtering for non-running services returned **no output**, as expected. CSV-imported property values are strings.
+
+#### Session 2 — Results and next steps
+
+- **Verified:** Error handling for a nonexistent service; live remote checks for two FS01 services; custom-object creation and property inspection; filtering and counting; live health-report collection; CSV export and import.
+- **Not yet done:** Updating and testing the saved `PowerShell/Test-ServerHealth.ps1` script with Session 2 improvements; adding DC01 service checks to the new report; production-grade exception classification, connectivity handling, or scheduled reporting.
+- **Future work:** Integrate tested improvements into the reusable script and validate them against the lab before committing a new script version.
