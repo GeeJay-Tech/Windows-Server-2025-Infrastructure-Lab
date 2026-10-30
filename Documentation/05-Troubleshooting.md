@@ -100,3 +100,34 @@ Subsequent Windows Group Policy Results verification identified `GPO-File-Server
 This completes the GPO application and winning-policy verification. A separate test removing or overriding the earlier local audit configuration was not performed.
 
 **Skills demonstrated:** Active Directory administration, OU management, Group Policy troubleshooting, PowerShell, Advanced Audit Policy Configuration, Resultant Set of Policy reporting and evidence-based validation.
+
+### Active Directory onboarding: password-policy failure and partial account creation (30 October 2026)
+
+**Issue:** The first attempt to create Daniel Brooks (`dbrooks`) using `New-ADUser` failed with an `ADPasswordComplexityException` because the temporary password did not meet the domain password policy. A second attempt returned `ADIdentityAlreadyExistsException`.
+
+**Investigation:** `Get-ADUser -Identity "dbrooks" -Properties Enabled,PasswordLastSet,Department` confirmed that the object existed with `Enabled = False`, a blank `PasswordLastSet`, and `Department = Finance`.
+
+**Resolution:** Set a compliant temporary password using `Set-ADAccountPassword -Identity "dbrooks" -Reset -NewPassword $Password -ErrorAction Stop`; enabled the existing account with `Enable-ADAccount`; set `ChangePasswordAtLogon` to `$true`; and added the account to `SG-Finance-Staff` using `Add-ADGroupMember`. These commands completed without reported errors.
+
+**Lesson:** A failed `New-ADUser` attempt can still leave an AD object behind. Check the existing object and repair its state rather than blindly retrying creation. A separate end-to-end sign-in test was not performed.
+
+### Finance share: controlled missing-group-membership scenario (30 October 2026)
+
+**Scenario:** Investigated a simulated report that one Finance employee could not access the Finance share while other authorised employees could. No actual access-denied sign-in was generated during this session.
+
+**Evidence gathered:**
+
+- FS01 was running and accessible for administration.
+- `Get-SmbShare` confirmed the `Finance` SMB share at `C:\Shares\Finance`.
+- `Get-SmbShareAccess -Name Finance` showed `CTRL-TECH\SG-Finance-Staff` with `Allow / Change` share permissions; no explicit Deny was shown in that output.
+- Emily Carter (`ecarter`) was deliberately left out of the Finance security group at onboarding. `Get-ADPrincipalGroupMembership -Identity "ecarter" | Select-Object Name` returned only `Domain Users`.
+
+**Likely cause and corrective action:** Emily did not belong to the security group granted access at the SMB-share layer. Ran:
+
+```powershell
+Add-ADGroupMember -Identity "SG-Finance-Staff" -Members "ecarter" -ErrorAction Stop
+```
+
+The user reported running this command without a reported error. **Actual folder access remains unverified:** a future test should use a fresh Emily sign-in on CLIENT01 to open `\\FS01\Finance`, while checking NTFS permissions if access is still denied. Group membership correction alone should not be presented as a confirmed end-to-end fix.
+
+**Skills practised:** Scoping an incident to one user, inspecting SMB share permissions, checking AD group membership, selecting a targeted change, and distinguishing a probable cause from verified resolution.
