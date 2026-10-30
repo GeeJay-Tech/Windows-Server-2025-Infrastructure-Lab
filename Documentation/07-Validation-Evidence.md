@@ -34,3 +34,17 @@ The screenshots below document policy configuration, client behaviour, file acce
 | 11 | FS01 Group Policy Results: Audit File System, Success and Failure, winning auditing GPO | [FS01 GPO auditing verification](../11-FS0-GPO-Auditing-Verification.png) |
 
 Screenshot 10 documents the original local auditing test. Screenshot 11 provides evidence that Windows identifies `GPO-File-Server-Auditing` as the winning GPO for Audit File System on FS01.
+
+### 30 October 2026 — User onboarding and Finance share investigation
+
+| Item | Evidence / status |
+| --- | --- |
+| Existing directory structure | Users, Groups, Servers and Workstations OUs observed on DC01 |
+| Departmental groups | `SG-Finance-Staff` and `SG-IT-Staff` confirmed in Groups OU |
+| Daniel Brooks | Account confirmed present after password-policy failure; initially disabled with no password set; subsequent password reset, enable, password-change-at-logon and group-add commands ran without reported errors |
+| Batch onboarding | Interactive loop reported onboarding completed for Emily Carter, Olivia Bennett and Marcus Reed |
+| Finance SMB share | FS01 `Finance` share at `C:\Shares\Finance`; `SG-Finance-Staff` shown with Allow/Change share access |
+| Emily Carter group membership | Initially only `Domain Users` returned; the command to add her to `SG-Finance-Staff` was run without reported error |
+| **Outstanding** | Verify Emily can open `\\FS01\Finance` from CLIENT01 after a fresh sign-in; confirm effective NTFS access if needed |
+
+This is evidence from the interactive lab session, not an independent new test against the servers or a verified end-to-end user access test. No new screenshots or saved onboarding script were added during this documentation update.
