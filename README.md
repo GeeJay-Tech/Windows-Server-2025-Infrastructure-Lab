@@ -4,7 +4,7 @@ A hands-on infrastructure lab built in Hyper-V to practise Windows domain admini
 
 The project demonstrates practical skills relevant to IT support, systems administration and infrastructure engineering: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy, investigating Windows Security events and developing PowerShell automation.
 
-**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Sessions 1 and 2 are complete. The reusable Session 1 health-check script is available, and Session 2 documents interactive error handling, multi-service checks, structured reporting and CSV export/import.
+**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Sessions 1 and 2 are complete. The reusable Session 1 health-check script is available, and Session 2 documents interactive error handling, multi-service checks, structured reporting and CSV export/import. A later lab exercise expanded departmental test accounts with PowerShell and investigated a controlled Finance share access scenario; end-to-end client access validation remains pending.
 
 ## At a glance
 
@@ -48,7 +48,7 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Built a Hyper-V NAT lab using the `192.168.100.0/24` network and `.1` gateway.
 - Established the `CTRL-TECH.net` Active Directory domain with AD DS and DNS on DC01.
 - Configured DHCP on DC01 and used DHCP addressing for CLIENT01.
-- Organised directory objects into OUs and created two test users with associated security groups.
+- Organised directory objects into OUs, created initial departmental test accounts and later expanded Finance and IT users through PowerShell onboarding.
 - Configured SMB shares on FS01 and exercised group-based share and NTFS permissions.
 - Configured workstation security through Group Policy and mapped network drives for domain users.
 - Configured domain password and account lockout policy.
@@ -63,6 +63,7 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Practised `try/catch` error handling, multi-service monitoring, PowerShell custom objects and filtering.
 - Generated, exported and re-imported a CSV health report from live FS01 service checks.
 - Saved the health-check automation as a `.ps1` script for reuse and further development.
+- Investigated a password-policy onboarding error and a simulated Finance share access issue involving missing security group membership.
 
 ## Explore the documentation
 
