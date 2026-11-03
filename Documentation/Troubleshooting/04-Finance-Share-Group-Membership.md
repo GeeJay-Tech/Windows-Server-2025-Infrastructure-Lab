@@ -15,7 +15,7 @@
 Add-ADGroupMember -Identity "SG-Finance-Staff" -Members "ecarter" -ErrorAction Stop
 ```
 
-The user reported running this command without a reported error. **At the time of this exercise, actual folder access remained unverified.** A later CLIENT01 sign-in and Finance-share access test succeeded on 3 November 2026, documented below.
+The user reported running this command without a reported error. **At the time of this exercise, actual folder access remained unverified.** A later CLIENT01 sign-in and Finance-share access test succeeded on 3 November 2026, documented in [CLIENT01 DHCP recovery and Finance access validation](05-CLIENT01-DHCP-Recovery.md).
 
 **Skills practised:** Scoping an incident to one user, inspecting SMB share permissions, checking AD group membership, selecting a targeted change, and distinguishing a probable cause from verified resolution.
 
