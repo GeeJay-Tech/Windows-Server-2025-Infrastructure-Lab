@@ -4,7 +4,7 @@ A hands-on infrastructure lab built in Hyper-V to practise Windows domain admini
 
 The project demonstrates practical skills relevant to IT support, systems administration and infrastructure engineering: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy, investigating Windows Security events and developing PowerShell automation.
 
-**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Sessions 1 and 2 are complete. The reusable Session 1 health-check script is available, and Session 2 documents interactive error handling, multi-service checks, structured reporting and CSV export/import. A later lab exercise expanded departmental test accounts with PowerShell and investigated a controlled Finance share access scenario; end-to-end client access validation remains pending.
+**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Sessions 1 and 2 are complete. The reusable Session 1 health-check script is available, and Session 2 documents interactive error handling, multi-service checks, structured reporting and CSV export/import. A later lab exercise expanded departmental test accounts with PowerShell and investigated a controlled Finance share access scenario; Emily's end-to-end Finance share access test has since succeeded. A CSV-driven Active Directory onboarding exercise also completed successfully for two additional users; a reusable script is now available for future testing.
 
 ## At a glance
 
@@ -63,7 +63,8 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Practised `try/catch` error handling, multi-service monitoring, PowerShell custom objects and filtering.
 - Generated, exported and re-imported a CSV health report from live FS01 service checks.
 - Saved the health-check automation as a `.ps1` script for reuse and further development.
-- Investigated a password-policy onboarding error and a simulated Finance share access issue involving missing security group membership.
+- Investigated a password-policy onboarding error and a simulated Finance share access issue involving missing security group membership; confirmed Emily's domain sign-in and Finance share access on CLIENT01.
+- Used CSV input and PowerShell to onboard two additional lab users; added a reusable CSV onboarding script to the PowerShell folder.
 
 ## Explore the documentation
 
@@ -83,6 +84,8 @@ The detailed implementation commands, troubleshooting investigations, validation
 ## Featured PowerShell script
 
 [**Test-ServerHealth.ps1**](PowerShell/Test-ServerHealth.ps1) — a first reusable health-check script for DC01 and FS01, checking ICMP reachability and the `LanmanServer` service. See the [session walkthrough](Documentation/06-PowerShell-Automation.md) for the commands, observed results and current limitations.
+
+[**New-ADUsersFromCsv.ps1**](PowerShell/New-ADUsersFromCsv.ps1) — reusable CSV-based Active Directory onboarding script, based on the successful interactive Session 3 exercise. The saved script itself is awaiting its first execution test. See the [Active Directory documentation](Documentation/02-Active-Directory-DNS-DHCP.md) for the workflow and CSV structure.
 
 ---
 
