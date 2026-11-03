@@ -66,6 +66,8 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Investigated a password-policy onboarding error and a simulated Finance share access issue involving missing security group membership; confirmed Emily's domain sign-in and Finance share access on CLIENT01.
 - Used CSV input and PowerShell to onboard two additional lab users; added a reusable CSV onboarding script to the PowerShell folder.
 
+- Performed a controlled CLIENT01 DNS configuration exercise and recorded that Windows reported disconnection while SMB access continued; the intended share outage was not reproduced.
+
 ## Explore the documentation
 
 The detailed implementation commands, troubleshooting investigations, validation evidence and PowerShell learning notes are organised by topic:
@@ -85,7 +87,7 @@ The detailed implementation commands, troubleshooting investigations, validation
 
 [**Test-ServerHealth.ps1**](PowerShell/Test-ServerHealth.ps1) — a first reusable health-check script for DC01 and FS01, checking ICMP reachability and the `LanmanServer` service. See the [session walkthrough](Documentation/06-PowerShell-Automation.md) for the commands, observed results and current limitations.
 
-[**New-ADUsersFromCsv.ps1**](PowerShell/New-ADUsersFromCsv.ps1) — reusable CSV-based Active Directory onboarding script, based on the successful interactive Session 3 exercise. The saved script itself is awaiting its first execution test. See the [Active Directory documentation](Documentation/02-Active-Directory-DNS-DHCP.md) for the workflow and CSV structure.
+[**New-ADUsersFromCsv.ps1**](PowerShell/New-ADUsersFromCsv.ps1) — reusable CSV-based Active Directory onboarding script, based on the successful interactive Session 3 exercise. The saved script's duplicate-check path was subsequently tested on DC01, correctly skipping both existing CSV accounts; creation of new accounts was validated earlier using the interactive commands. See the [Active Directory documentation](Documentation/02-Active-Directory-DNS-DHCP.md) for the workflow and CSV structure.
 
 ---
 
