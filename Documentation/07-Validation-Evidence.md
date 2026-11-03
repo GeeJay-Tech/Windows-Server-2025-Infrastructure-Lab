@@ -48,3 +48,14 @@ Screenshot 10 documents the original local auditing test. Screenshot 11 provides
 | **Outstanding** | Verify Emily can open `\\FS01\Finance` from CLIENT01 after a fresh sign-in; confirm effective NTFS access if needed |
 
 This is evidence from the interactive lab session, not an independent new test against the servers or a verified end-to-end user access test. No new screenshots or saved onboarding script were added during this documentation update.
+
+### 3 November 2026 — Completed client access test and onboarding
+
+| Item | Observed result |
+| --- | --- |
+| CLIENT01 DHCP | Lease renewal succeeded after restart of `DHCPServer` on DC01; underlying cause of prior timeout not confirmed |
+| Emily Carter | Successful domain sign-in to CLIENT01 and successful access to `\\FS01\Finance` |
+| CSV onboarding | `NewEmployees.csv` was imported on DC01; interactive onboarding routine reported success for Charlotte Evans and Thomas Hughes |
+| Reusable script | [`New-ADUsersFromCsv.ps1`](../PowerShell/New-ADUsersFromCsv.ps1) committed to GitHub; saved-file execution test pending |
+
+The successful Emily access test resolves the earlier pending end-to-end validation. No screenshot evidence from the new test has been committed.
