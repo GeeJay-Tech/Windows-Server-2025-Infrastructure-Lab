@@ -65,7 +65,6 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Saved the health-check automation as a `.ps1` script for reuse and further development.
 - Investigated a password-policy onboarding error and a simulated Finance share access issue involving missing security group membership; confirmed Emily's domain sign-in and Finance share access on CLIENT01.
 - Used CSV input and PowerShell to onboard two additional lab users; added a reusable CSV onboarding script to the PowerShell folder.
-
 - Performed a controlled CLIENT01 DNS configuration exercise and recorded that Windows reported disconnection while SMB access continued; the intended share outage was not reproduced.
 
 ## Explore the documentation
@@ -78,7 +77,7 @@ The detailed implementation commands, troubleshooting investigations, validation
 | Active Directory, DNS and DHCP | [02 — Active Directory, DNS and DHCP](Documentation/02-Active-Directory-DNS-DHCP.md) |
 | Domain membership, file shares and permissions | [03 — File Server Permissions](Documentation/03-File-Server-Permissions.md) |
 | Group Policy and file access auditing | [04 — Group Policy and Auditing](Documentation/04-Group-Policy-Auditing.md) |
-| Resolved DNS and GPO incidents | [05 — Troubleshooting](Documentation/05-Troubleshooting.md) |
+| Troubleshooting incident index and individual case studies | [05 — Troubleshooting](Documentation/05-Troubleshooting.md) |
 | PowerShell Automation Sessions 1–2 | [06 — PowerShell Automation](Documentation/06-PowerShell-Automation.md) |
 | Screenshots and validation checklist | [07 — Validation Evidence](Documentation/07-Validation-Evidence.md) |
 | Lessons learned and planned work | [08 — Lessons Learned](Documentation/08-Lessons-Learned.md) |
