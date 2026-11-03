@@ -104,3 +104,22 @@ foreach ($User in $Users) {
 **Observed outcome:** All three new employees reported `onboarding completed`. The script was executed interactively on DC01; it was **not** saved or published as a tested `.ps1` file during this session. The training deliberately kept Emily out of the Finance group until the simulated access investigation.
 
 **Security and reliability notes:** These test accounts initially used the same temporary password and were configured to change it at sign-in; use unique secure credentials or an approved onboarding process in production. The example skips existing usernames but does not repair partially created accounts or roll back a successful user creation if group assignment fails.
+
+## CSV-driven onboarding — PowerShell Session 3 (3 November 2026)
+
+Created `NewEmployees.csv` on DC01 with two additional lab employees:
+
+| Employee | Username | Department | Group |
+| --- | --- | --- | --- |
+| Charlotte Evans | `cevans` | Finance | `SG-Finance-Staff` |
+| Thomas Hughes | `thughes` | IT | `SG-IT-Staff` |
+
+Imported the file using `Import-Csv` and used the employee records as input to a `foreach` loop. An interactive onboarding routine on DC01 completed successfully for both accounts. Each new employee was prompted for an individual temporary password; the process created the account disabled, configured a password, required password change at first logon, assigned the departmental group and enabled the account.
+
+The reusable version is saved in [`PowerShell/New-ADUsersFromCsv.ps1`](../PowerShell/New-ADUsersFromCsv.ps1). It expects a CSV with the columns `FirstName,LastName,Username,Department,Group` and accepts a `-CsvPath` parameter:
+
+```powershell
+.\New-ADUsersFromCsv.ps1 -CsvPath "$env:USERPROFILE\Desktop\NewEmployees.csv"
+```
+
+**Validation status:** The *interactive onboarding commands* were run successfully for Charlotte and Thomas. The newly committed standalone `.ps1` file has not yet been executed and independently validated on DC01. It skips existing usernames, but does not automatically repair a partially created account following an error. Avoid storing passwords in the CSV and use controlled onboarding procedures in production.
