@@ -56,6 +56,22 @@ This is evidence from the interactive lab session, not an independent new test a
 | CLIENT01 DHCP | Lease renewal succeeded after restart of `DHCPServer` on DC01; underlying cause of prior timeout not confirmed |
 | Emily Carter | Successful domain sign-in to CLIENT01 and successful access to `\\FS01\Finance` |
 | CSV onboarding | `NewEmployees.csv` was imported on DC01; interactive onboarding routine reported success for Charlotte Evans and Thomas Hughes |
-| Reusable script | [`New-ADUsersFromCsv.ps1`](../PowerShell/New-ADUsersFromCsv.ps1) committed to GitHub; saved-file execution test pending |
+| Reusable script | [`New-ADUsersFromCsv.ps1`](../PowerShell/New-ADUsersFromCsv.ps1) committed to GitHub; saved-file duplicate handling verified on DC01 (both existing accounts skipped) |
 
 The successful Emily access test resolves the earlier pending end-to-end validation. No screenshot evidence from the new test has been committed.
+
+### 3 November 2026 — Controlled DNS fault: results and limits
+
+| Check | Observed result |
+| --- | --- |
+| Domain service checks | DNS, Netlogon and NTDS on DC01 all Running |
+| CLIENT01 sign-in reproduction | Completed within a few seconds; simulated slow sign-in not reproduced |
+| CLIENT01 DNS override | Changed from DC01 `192.168.100.2` to FS01 `192.168.100.3` |
+| CLIENT01 IP configuration | `192.168.100.100` remained assigned; `ipconfig /all` showed DNS `192.168.100.3` |
+| Windows network status | User observed a disconnected status after the DNS change |
+| Finance share access | Both `\\192.168.100.3\Finance` and `\\FS01\Finance` opened successfully |
+| PowerShell DNS restoration | `-ResetServerAddresses` returned a CIM permission-denied error |
+| Restored state | Reconfigured IPv4 DNS to automatic in Windows network properties; DNS reverted to `192.168.100.2` and Windows network status returned to connected |
+| Conclusion | Intended file-share outage **not reproduced**; specific mechanism behind Windows network-status change not proven |
+
+This is an honest record of an **inconclusive controlled test**, not evidence of a solved Finance-share incident. No new screenshot files were uploaded.
