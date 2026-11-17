@@ -252,7 +252,7 @@ Prepared the health-check function as a reusable PowerShell script.
 
 **GitHub location:** [PowerShell/Test-ServerHealth.ps1](../PowerShell/Test-ServerHealth.ps1)
 
-The saved version includes function calls for DC01 and FS01 so both servers can be checked when the script executes.
+The original Session 1 version included function calls for DC01 and FS01. The current saved script was replaced by the tested multi-server service-reporting version in Session 4 (17 November 2026).
 
 To execute the saved script from PowerShell on DC01:
 
@@ -273,11 +273,11 @@ The script provides a starting point for developing more advanced infrastructure
 | Reusable PowerShell function | DC01 | Successful |
 | Reusable PowerShell function | FS01 | Successful |
 
-These results were observed during the interactive PowerShell training session. The saved script is available for future execution and validation.
+These results were observed during the interactive PowerShell training session. The original Session 1 script has since been replaced by the tested Session 4 version. The results here describe the earlier interactive testing.
 
-### Session 1 — Limitations
+### Session 1 — Original version limitations (superseded in part by Session 4)
 
-The current script is an introductory automation exercise rather than a complete production monitoring solution.
+The original Session 1 script was an introductory automation exercise rather than a production monitoring solution. Some of the following limitations were addressed in Session 4; others remain.
 
 - An ICMP failure prevents the script from proceeding to the service check.
 - ICMP failure does not necessarily mean a server is offline.
@@ -303,7 +303,7 @@ These limitations will be addressed progressively in future automation sessions.
 
 ### Session 2 — Error Handling and Service Reporting (28 October 2026)
 
-**Objective:** Extend the interactive PowerShell exercises from Session 1 with error handling, multi-service checks, structured results, filtering, and CSV reporting. These exercises were performed interactively on DC01; the existing [Test-ServerHealth.ps1](../PowerShell/Test-ServerHealth.ps1) file has **not** yet been rewritten to include these improvements.
+**Objective:** Extend the interactive PowerShell exercises from Session 1 with error handling, multi-service checks, structured results, filtering, and CSV reporting. These exercises were performed interactively on DC01; at that date the existing [Test-ServerHealth.ps1](../PowerShell/Test-ServerHealth.ps1) file had **not** yet been rewritten to include these improvements. It was updated and tested later in Session 4.
 
 #### Task 1 — Handling service-query errors
 
@@ -415,5 +415,48 @@ The imported report displayed both FS01 services as `Running`. Filtering for non
 #### Session 2 — Results and next steps
 
 - **Verified:** Error handling for a nonexistent service; live remote checks for two FS01 services; custom-object creation and property inspection; filtering and counting; live health-report collection; CSV export and import.
-- **Not yet done:** Updating and testing the saved `PowerShell/Test-ServerHealth.ps1` script with Session 2 improvements; adding DC01 service checks to the new report; production-grade exception classification, connectivity handling, or scheduled reporting.
-- **Future work:** Integrate tested improvements into the reusable script and validate them against the lab before committing a new script version.
+- **At the end of Session 2, not yet done:** Updating and testing the saved `PowerShell/Test-ServerHealth.ps1` script with Session 2 improvements; adding DC01 service checks to the new report; production-grade exception classification, connectivity handling, or scheduled reporting. The first two items were completed in Session 4.
+- **Subsequent work:** The multi-server checks, structured results and CSV export were integrated into the reusable script, tested on DC01 and committed in Session 4.
+
+### Session 4 — Multi-server Infrastructure Health Reporting (17 November 2026)
+
+**Objective:** Extend the original `Test-ServerHealth.ps1` beyond single-service checks to collect structured multi-server service statuses and export the results to CSV.
+
+**Environment:** PowerShell on DC01 queried DC01 and FS01 in the existing `CTRL-TECH.net` lab.
+
+**Work completed:**
+
+1. Ran an interactive `Get-Service -ComputerName DC01` loop with `try/catch` and `-ErrorAction Stop` against `LanmanServer`, `WinRM` and `DNS`. All three returned `Running`.
+2. Created `[PSCustomObject]` results for service, server and status.
+3. Introduced a `$ServerServices` hashtable with separate service lists for DC01 and FS01 and nested `foreach` loops for remote service queries.
+4. Confirmed the five resulting service checks through the PowerShell table output.
+5. Exported `$HealthReport` to `$env:USERPROFILE\Desktop\Infrastructure-HealthReport.csv` using `Export-Csv -NoTypeInformation` and inspected the CSV file successfully.
+6. Replaced the saved `C:\Scripts\Test-ServerHealth.ps1` with the updated version and executed it on DC01 using:
+
+```powershell
+& "C:\Scripts\Test-ServerHealth.ps1"
+```
+
+**User-confirmed saved-script results:**
+
+| Server | Service | Observed status |
+| --- | --- | --- |
+| DC01 | DNS | Running |
+| DC01 | LanmanServer | Running |
+| DC01 | WinRM | Running |
+| FS01 | LanmanServer | Running |
+| FS01 | WinRM | Running |
+
+The user also confirmed that running the saved script produced the CSV export confirmation and that the CSV report contained all five results. These were lab-side observations reported during the exercise, not an independent GitHub-side execution test.
+
+**Source:** [Updated Test-ServerHealth.ps1](../PowerShell/Test-ServerHealth.ps1).
+
+**Current limitations and next improvements:**
+
+- The Session 4 version checks Windows service statuses; it no longer includes the original ICMP connectivity test.
+- A successful service-status query does not establish end-to-end application availability.
+- A failed query is recorded as `Check Failed` without separating inaccessible hosts, missing services and permissions failures.
+- The CSV is overwritten on each run; no timestamps, alerting, historical logs or scheduling have been implemented.
+- Future enhancements: disk capacity, event-log review, clearer failure diagnostics and scheduled reporting, tested incrementally.
+
+**Outcome:** Tested the saved script with five live service queries across two servers and successfully produced a reusable CSV health report.
