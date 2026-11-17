@@ -88,3 +88,17 @@ This is an honest record of an **inconclusive controlled test**, not evidence of
 | GitHub script | Updated to the Session 4 version, matching the code tested on DC01 |
 
 No new screenshots or CSV files were uploaded to the repository; results were confirmed during the live lab session. Error handling for a failed query had been practised previously in Session 2, but the Session 4 saved script's failure path was not separately exercised.
+
+### 17 November 2026 — PowerShell Session 5 validation
+
+| Check | Observed result |
+| --- | --- |
+| FS01 disk query | C: total 125.89 GB; free 107.31 GB |
+| FS01 disk usage | Approximately 14.76% used |
+| Simulated threshold tests | 14.76% = Healthy; 80% = Warning; 90% = Critical |
+| Saved script — DC01 disk | C: 125.92 GB total, 108.01 GB free, 14.22% used, Healthy |
+| Saved script — FS01 disk | C: 125.89 GB total, 107.31 GB free, 14.76% used, Healthy |
+| Saved script — services | DC01 DNS/LanmanServer/WinRM and FS01 LanmanServer/WinRM all Running |
+| CSV export | Both HealthReport and DiskReport export confirmation messages visible on DC01 |
+
+Evidence comes from the user's PowerShell output screenshot during the lab session. The disk-report CSV content was not separately inspected after the saved-script run, and neither CSV nor screenshot has been committed as a separate file. Error-path behaviour for the saved disk-monitoring code remains untested.
