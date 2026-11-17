@@ -36,3 +36,61 @@ $ReportPath = "$env:USERPROFILE\Desktop\Infrastructure-HealthReport.csv"
 $HealthReport | Export-Csv -Path $ReportPath -NoTypeInformation
 
 Write-Host "Health report exported to $ReportPath"
+
+# Disk Space Monitoring
+# Checks fixed disks on DC01 and FS01
+
+$Servers = @("DC01", "FS01")
+
+$DiskReport = foreach ($Server in $Servers) {
+
+    try {
+        $Disks = Get-WmiObject -Class Win32_LogicalDisk `
+            -ComputerName $Server `
+            -Filter "DriveType=3" `
+            -ErrorAction Stop
+
+        foreach ($Disk in $Disks) {
+
+            if ($Disk.Size -le 0) {
+                continue
+            }
+
+            $UsedPercent = [math]::Round(
+                (($Disk.Size - $Disk.FreeSpace) / $Disk.Size) * 100, 2
+            )
+
+            if ($UsedPercent -ge 90) {
+                $Status = "Critical"
+            }
+            elseif ($UsedPercent -ge 80) {
+                $Status = "Warning"
+            }
+            else {
+                $Status = "Healthy"
+            }
+
+            [PSCustomObject]@{
+                Server      = $Server
+                Drive       = $Disk.DeviceID
+                TotalGB     = [math]::Round($Disk.Size / 1GB, 2)
+                FreeGB      = [math]::Round($Disk.FreeSpace / 1GB, 2)
+                UsedPercent = $UsedPercent
+                Status      = $Status
+            }
+        }
+    }
+    catch {
+        Write-Warning "Disk check failed for ${Server}: $($_.Exception.Message)"
+    }
+}
+
+# Display disk results
+$DiskReport | Sort-Object Server, Drive | Format-Table -AutoSize
+
+# Export disk report to CSV
+$DiskReportPath = "$env:USERPROFILE\Desktop\Infrastructure-DiskReport.csv"
+
+$DiskReport | Export-Csv -Path $DiskReportPath -NoTypeInformation
+
+Write-Host "Disk report exported to $DiskReportPath"
