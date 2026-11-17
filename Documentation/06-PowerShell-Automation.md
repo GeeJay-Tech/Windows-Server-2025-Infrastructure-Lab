@@ -460,3 +460,43 @@ The user also confirmed that running the saved script produced the CSV export co
 - Future enhancements: disk capacity, event-log review, clearer failure diagnostics and scheduled reporting, tested incrementally.
 
 **Outcome:** Tested the saved script with five live service queries across two servers and successfully produced a reusable CSV health report.
+
+### Session 5 — Remote Disk Capacity and Health Thresholds (17 November 2026)
+
+**Objective:** Extend the existing, tested multi-server service monitoring script to capture disk capacity, calculate disk usage percentage, classify disk health and export a separate CSV report.
+
+**Interactive tests on DC01:**
+
+- Queried fixed disks on FS01 using `Get-WmiObject -Class Win32_LogicalDisk -ComputerName FS01 -Filter "DriveType=3"`. Confirmed C: capacity of **125.89 GB**, with **107.31 GB free**.
+- Calculated FS01's used capacity at approximately **14.76%** with `[math]::Round((($Disk.Size - $Disk.FreeSpace) / $Disk.Size) * 100, 2)`.
+- Introduced thresholds with `if` / `elseif` / `else`: **Healthy below 80%**, **Warning from 80% to below 90%**, and **Critical from 90% upwards**.
+- Validated each branch with simulated usage values: **14.76 → Healthy**, **80 → Warning**, **90 → Critical**. No disks were filled or altered to test warnings.
+- Repeated remote disk checks for both DC01 and FS01 using a `foreach` loop and structured `[PSCustomObject]` output.
+- Appended the disk monitoring section to the **existing** `C:\Scripts\Test-ServerHealth.ps1`, preserving all five service checks from Session 4.
+
+**Actual results from the saved script, run on DC01:**
+
+| Server | Drive | Total (GB) | Free (GB) | Used (%) | Status |
+| --- | --- | ---: | ---: | ---: | --- |
+| DC01 | C: | 125.92 | 108.01 | 14.22 | Healthy |
+| FS01 | C: | 125.89 | 107.31 | 14.76 | Healthy |
+
+The saved script also returned all five Windows services as `Running`:
+
+| Server | Services | Result |
+| --- | --- | --- |
+| DC01 | DNS, LanmanServer, WinRM | All Running |
+| FS01 | LanmanServer, WinRM | Both Running |
+
+**Exported files on DC01:**
+
+- `C:\Users\labadmin\Desktop\Infrastructure-HealthReport.csv`
+- `C:\Users\labadmin\Desktop\Infrastructure-DiskReport.csv`
+
+Both export confirmation messages were visible in the script's PowerShell output. The service report had been opened and inspected in Session 4; in Session 5 the output and export messages were observed, but the disk CSV was not independently opened and inspected after executing the saved script.
+
+**Implementation details:** The new disk section uses `Get-WmiObject`, `-ErrorAction Stop`, server-level `try/catch`, a check for zero-sized disks, calculated percentage usage and a separate `Export-Csv -NoTypeInformation`. The script is [available here](../PowerShell/Test-ServerHealth.ps1).
+
+**Limitations:** These are example percentage thresholds, not calibrated production alerting rules. No alert notification, historical records, scheduling or disk-growth trend analysis is present. WMI query failure handling is implemented but not deliberately tested in the saved script. CSV reports overwrite previous runs. A successful service-status or WMI query is not proof that the complete application or storage workload is healthy.
+
+**Outcome:** Verified that the saved script still performs all five service checks and additionally reports two healthy disks, with both CSV export operations completing without reported errors.
