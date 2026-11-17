@@ -4,7 +4,7 @@ A hands-on infrastructure lab built in Hyper-V to practise Windows domain admini
 
 The project demonstrates practical skills relevant to IT support, systems administration and infrastructure engineering: managing Active Directory, troubleshooting DNS, configuring DHCP, assigning group-based access, applying Group Policy, investigating Windows Security events and developing PowerShell automation.
 
-**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Sessions 1, 2, 4 and 5 are complete. The current health-check script was tested on DC01 in Session 5 with five service checks, two disk capacity checks, threshold classification and separate CSV exports; Session 2 documents earlier interactive error-handling and reporting exercises. A later lab exercise expanded departmental test accounts with PowerShell and investigated a controlled Finance share access scenario; Emily's end-to-end Finance share access test has since succeeded. A CSV-driven Active Directory onboarding exercise also completed successfully for two additional users; a reusable script is now available for future testing.
+**Current status:** Core domain, networking, file services and policy exercises are implemented. The FS01 secure dynamic DNS registration issue has been resolved. The file-server auditing GPO application and winning-policy verification are complete. PowerShell Automation Sessions 1, 2, 4, 5 and 6 have been completed through the remote Event Log investigation. The current health-check script was tested on DC01 in Session 5 with five service checks, two disk capacity checks, threshold classification and separate CSV exports; Session 2 documents earlier interactive error-handling and reporting exercises. A later lab exercise expanded departmental test accounts with PowerShell and investigated a controlled Finance share access scenario; Emily's end-to-end Finance share access test has since succeeded. A CSV-driven Active Directory onboarding exercise also completed successfully for two additional users; a reusable script is now available for future testing.
 
 ## At a glance
 
@@ -65,6 +65,7 @@ DC01 provides domain identity, internal name resolution and client address alloc
 - Updated and executed the reusable health-check `.ps1` script with five service checks and two fixed-disk capacity checks across DC01 and FS01, structured output, per-service query error handling, disk warning thresholds and two CSV exports.
 - Investigated a password-policy onboarding error and a simulated Finance share access issue involving missing security group membership; confirmed Emily's domain sign-in and Finance share access on CLIENT01.
 - Used CSV input and PowerShell to onboard two additional lab users; added a reusable CSV onboarding script to the PowerShell folder.
+- Diagnosed and resolved remote FS01 Event Log access from DC01 by inspecting and enabling the relevant Windows Firewall rules; correlated DCOM errors with planned maintenance restarts.
 - Performed a controlled CLIENT01 DNS configuration exercise and recorded that Windows reported disconnection while SMB access continued; the intended share outage was not reproduced.
 
 ## Explore the documentation
@@ -78,7 +79,7 @@ The detailed implementation commands, troubleshooting investigations, validation
 | Domain membership, file shares and permissions | [03 — File Server Permissions](Documentation/03-File-Server-Permissions.md) |
 | Group Policy and file access auditing | [04 — Group Policy and Auditing](Documentation/04-Group-Policy-Auditing.md) |
 | Troubleshooting incident index and individual case studies | [05 — Troubleshooting](Documentation/05-Troubleshooting.md) |
-| PowerShell Automation Sessions 1, 2, 4 and 5 | [06 — PowerShell Automation](Documentation/06-PowerShell-Automation.md) |
+| PowerShell Automation Sessions 1, 2, 4, 5 and 6 | [06 — PowerShell Automation](Documentation/06-PowerShell-Automation.md) |
 | Screenshots and validation checklist | [07 — Validation Evidence](Documentation/07-Validation-Evidence.md) |
 | Lessons learned and planned work | [08 — Lessons Learned](Documentation/08-Lessons-Learned.md) |
 
