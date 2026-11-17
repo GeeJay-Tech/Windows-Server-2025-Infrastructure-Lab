@@ -500,3 +500,17 @@ Both export confirmation messages were visible in the script's PowerShell output
 **Limitations:** These are example percentage thresholds, not calibrated production alerting rules. No alert notification, historical records, scheduling or disk-growth trend analysis is present. WMI query failure handling is implemented but not deliberately tested in the saved script. CSV reports overwrite previous runs. A successful service-status or WMI query is not proof that the complete application or storage workload is healthy.
 
 **Outcome:** Verified that the saved script still performs all five service checks and additionally reports two healthy disks, with both CSV export operations completing without reported errors.
+
+### Session 6 — Remote Windows Event Log investigation (17 November 2026)
+
+**Objective:** Use `Get-WinEvent` from DC01 to retrieve genuine FS01 System log errors from the previous seven days and interpret them using related event evidence.
+
+**Actual incident during the lab:** The initial remote `Get-WinEvent` query failed with `The RPC server is unavailable`. Investigation confirmed TCP 135 reachable, the remote EventLog service Running and the Remote Event Log Management firewall group disabled on FS01.
+
+**Action:** Enabled that firewall group on FS01. **Retest succeeded** using the original remote event query, returning DistributedCOM Event ID 10005 entries.
+
+**Event analysis:** Six DCOM 10005 errors at 03:37:29 indicated failure to activate Windows Update (`wuauserv`) with error 1115. Related System events showed `MoUsoCoreWorker.exe` initiated a planned restart at 03:37:25, followed by Event Log stop events and another planned `TrustedInstaller.exe` restart. A subsequent remote service check returned `wuauserv = Stopped`, which is not abnormal by itself. This evidence is consistent with startup attempted during planned shutdown rather than a confirmed persistent Windows Update fault.
+
+**Documentation:** [07 — FS01 remote Event Log RPC incident](Troubleshooting/07-FS01-Remote-Event-Log-RPC.md).
+
+**Next automation step:** Only after developing and testing a reusable query routine should Event Log collection be integrated into `Test-ServerHealth.ps1`. **No change to that script was made in Session 6.**
