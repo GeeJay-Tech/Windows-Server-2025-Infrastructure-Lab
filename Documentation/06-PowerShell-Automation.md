@@ -514,3 +514,32 @@ Both export confirmation messages were visible in the script's PowerShell output
 **Documentation:** [07 — FS01 remote Event Log RPC incident](Troubleshooting/07-FS01-Remote-Event-Log-RPC.md).
 
 **Next automation step:** Only after developing and testing a reusable query routine should Event Log collection be integrated into `Test-ServerHealth.ps1`. **No change to that script was made in Session 6.**
+
+### Session 7 — Automated Remote Event Log Reporting (17 November 2026)
+
+**Objective:** Extend the previously tested `Test-ServerHealth.ps1` with remote Windows System Event Log monitoring and a third CSV export, while keeping the existing service and disk checks functional.
+
+**Implementation on DC01:**
+
+- Appended an Event Log section after the existing disk report in `C:\Scripts\Test-ServerHealth.ps1`.
+- Queried both `DC01` and `FS01` using `Get-WinEvent -ComputerName` with a `-FilterHashtable` selecting `System` events, **Level 2 (Error)** and **Level 3 (Warning)**, within the previous seven days.
+- Limited retrieval to **20 events per server** and returned structured records using `[PSCustomObject]` with `Server`, `Time`, `EventID`, `Severity`, `Source` and `Status`.
+- Used `try/catch` with `-ErrorAction Stop` to record query failure or no-match results.
+- Displayed a `Windows Event Log Report` table and exported `Infrastructure-EventReport.csv` on the current user's Desktop.
+- Preserved the previously verified service report and disk report sections.
+
+**Actual validation:** Initially, the saved-script output ended immediately after the disk report. `Get-Content "C:\Scripts\Test-ServerHealth.ps1" -Tail 15` showed the event-monitoring section had not been saved in that file. After the user saved the Event Log section, they confirmed that the **third Event Log report appeared** and that **`Infrastructure-EventReport.csv` contained the results**. The service and disk reports had also appeared in the execution output.
+
+**Files produced by the script:** `Infrastructure-HealthReport.csv`, `Infrastructure-DiskReport.csv`, and `Infrastructure-EventReport.csv`. These are generated in the running user's Desktop directory; they were not uploaded to GitHub.
+
+**Key learning points:**
+
+- `Get-WinEvent` retrieves Windows events, including from remote machines when permissions, services and firewall settings permit.
+- `-FilterHashtable` constrains the query at the event source rather than retrieving an entire log and filtering afterwards.
+- `Level = 2,3` selects Errors and Warnings; `StartTime` limits the history window.
+- `[PSCustomObject]` produces consistent fields for tabular display and CSV export.
+- `try/catch` handles errors during event retrieval, and `Export-Csv -NoTypeInformation` creates a reusable report file.
+
+**Limits:** The individual event records/counts from the Session 7 CSV were not provided for review, so no claim is made about particular Event IDs or severity distribution from this execution. The script's no-match and error paths were not separately tested in Session 7. CSV outputs are overwritten each run; there is no scheduling, alerting or historical retention yet. The current output has a per-server 20-event cap and is not a comprehensive audit of every System event.
+
+**Source:** [Test-ServerHealth.ps1](../PowerShell/Test-ServerHealth.ps1), updated with the Session 7 code validated in the lab.
