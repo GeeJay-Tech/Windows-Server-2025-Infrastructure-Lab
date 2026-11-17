@@ -13,7 +13,7 @@ The lab exercises cover the following outcomes. Commands are provided so that th
 | Workstation policy and drive mapping | `gpresult /r`, visible workstation settings and mapped drives in the user's session |
 | Password and lockout policy | Effective domain settings from `Get-ADDefaultDomainPasswordPolicy` |
 | File auditing | FS01 Security Event ID 4663, `auditpol` output and Group Policy Results identifying `GPO-File-Server-Auditing` as the winning GPO |
-| PowerShell automation | Successful interactive connectivity and remote service checks against DC01 and FS01; reusable script in `PowerShell/Test-ServerHealth.ps1` |
+| PowerShell automation | Session 4 saved script tested with five service checks across DC01 and FS01; results displayed and exported to CSV |
 
 ### Screenshots
 
@@ -75,3 +75,16 @@ The successful Emily access test resolves the earlier pending end-to-end validat
 | Conclusion | Intended file-share outage **not reproduced**; specific mechanism behind Windows network-status change not proven |
 
 This is an honest record of an **inconclusive controlled test**, not evidence of a solved Finance-share incident. No new screenshot files were uploaded.
+
+### 17 November 2026 — PowerShell Session 4 validation
+
+| Test | User-observed result |
+| --- | --- |
+| Interactive service checks — DC01 | DNS, LanmanServer, WinRM: Running |
+| Interactive service checks — FS01 | LanmanServer, WinRM: Running |
+| Structured health report | Five rows with server, service and status |
+| CSV export | `Infrastructure-HealthReport.csv` opened and all five records visible |
+| Saved script execution | `C:\Scripts\Test-ServerHealth.ps1` executed successfully on DC01 with the expected five results and export message |
+| GitHub script | Updated to the Session 4 version, matching the code tested on DC01 |
+
+No new screenshots or CSV files were uploaded to the repository; results were confirmed during the live lab session. Error handling for a failed query had been practised previously in Session 2, but the Session 4 saved script's failure path was not separately exercised.
