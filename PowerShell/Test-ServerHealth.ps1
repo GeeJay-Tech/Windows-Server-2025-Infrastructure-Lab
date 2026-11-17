@@ -1,24 +1,38 @@
-function Test-ServerHealth {
-    param(
-        [string]$Server
-    )
+# Infrastructure Health Monitoring
+# Checks critical services on DC01 and FS01
 
-    if (Test-Connection -ComputerName $Server -Count 2 -Quiet) {
-        Write-Host "$Server is reachable"
+$ServerServices = @{
+    "DC01" = @("LanmanServer", "WinRM", "DNS")
+    "FS01" = @("LanmanServer", "WinRM")
+}
 
-        $Service = Get-Service -ComputerName $Server -Name LanmanServer
+$HealthReport = foreach ($Server in $ServerServices.Keys) {
+    foreach ($ServiceName in $ServerServices[$Server]) {
+        try {
+            $Service = Get-Service -ComputerName $Server -Name $ServiceName -ErrorAction Stop
 
-        if ($Service.Status -eq 'Running') {
-            Write-Host "$Server Server service is running"
+            [PSCustomObject]@{
+                Server  = $Server
+                Service = $ServiceName
+                Status  = $Service.Status
+            }
         }
-        else {
-            Write-Host "$Server Server service is NOT running"
+        catch {
+            [PSCustomObject]@{
+                Server  = $Server
+                Service = $ServiceName
+                Status  = "Check Failed"
+            }
         }
-    }
-    else {
-        Write-Host "$Server is NOT reachable via ICMP"
     }
 }
 
-Test-ServerHealth -Server FS01
-Test-ServerHealth -Server DC01
+# Display the results
+$HealthReport | Sort-Object Server, Service | Format-Table -AutoSize
+
+# Export the results to CSV
+$ReportPath = "$env:USERPROFILE\Desktop\Infrastructure-HealthReport.csv"
+
+$HealthReport | Export-Csv -Path $ReportPath -NoTypeInformation
+
+Write-Host "Health report exported to $ReportPath"
