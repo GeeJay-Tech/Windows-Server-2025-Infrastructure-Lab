@@ -117,3 +117,16 @@ Evidence comes from the user's PowerShell output screenshot during the lab sessi
 | Windows Update service follow-up | `wuauserv` Stopped; insufficient alone to indicate failure |
 
 The remote event-query recovery is verified by the successful retest. The DCOM explanation is consistent with the shutdown events but does not prove update installation success. No Event Log collection has yet been added to the saved health-check script.
+
+### 17 November 2026 — Session 7 Event Log monitoring validation
+
+| Check | Observed result |
+| --- | --- |
+| Initial saved-script execution | Service and disk reports appeared; Event Log section absent |
+| Diagnostic check | `Get-Content ... -Tail 15` showed file ended after disk CSV export |
+| Updated saved script | User subsequently confirmed Windows Event Log report appeared |
+| CSV result | User opened `Infrastructure-EventReport.csv` and confirmed Event Log results were present |
+| Existing monitoring | Service and disk reports continued to appear |
+| GitHub | Event Log monitoring code committed to `PowerShell/Test-ServerHealth.ps1` |
+
+Session 7 event IDs, event counts and individual records were not submitted, so they are not asserted here. No CSV or screenshot file was uploaded. The event-query error/no-match branches were not specifically tested.
