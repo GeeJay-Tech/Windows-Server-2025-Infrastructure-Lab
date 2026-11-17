@@ -12,6 +12,7 @@ This index links to individual, evidence-based troubleshooting write-ups from th
 | 30 October–3 November 2026 | [04 — Finance share group membership](Troubleshooting/04-Finance-Share-Group-Membership.md) | Group membership corrected; Emily's share access verified on CLIENT01 later |
 | 3 November 2026 | [05 — CLIENT01 DHCP lease recovery](Troubleshooting/05-CLIENT01-DHCP-Recovery.md) | DHCP functionality restored; underlying cause not established |
 | 3 November 2026 | [06 — CLIENT01 DNS controlled exercise](Troubleshooting/06-CLIENT01-DNS-Controlled-Exercise.md) | Inconclusive: network status changed, but the intended share failure did not occur |
+| 17 November 2026 | [07 — FS01 remote Event Log RPC access](Troubleshooting/07-FS01-Remote-Event-Log-RPC.md) | Resolved; remote event retrieval verified after firewall change |
 
 ## How future cases are documented
 
