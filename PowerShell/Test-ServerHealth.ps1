@@ -94,3 +94,68 @@ $DiskReportPath = "$env:USERPROFILE\Desktop\Infrastructure-DiskReport.csv"
 $DiskReport | Export-Csv -Path $DiskReportPath -NoTypeInformation
 
 Write-Host "Disk report exported to $DiskReportPath"
+
+# ==========================================
+# Windows Event Log Monitoring
+# ==========================================
+
+$Servers = @("DC01", "FS01")
+$StartTime = (Get-Date).AddDays(-7)
+
+$EventReport = foreach ($Server in $Servers) {
+
+    try {
+        $Events = Get-WinEvent -ComputerName $Server `
+            -FilterHashtable @{
+                LogName   = "System"
+                Level     = 2, 3
+                StartTime = $StartTime
+            } `
+            -MaxEvents 20 `
+            -ErrorAction Stop
+
+        foreach ($Event in $Events) {
+
+            [PSCustomObject]@{
+                Server    = $Server
+                Time      = $Event.TimeCreated
+                EventID   = $Event.Id
+                Severity  = $Event.LevelDisplayName
+                Source    = $Event.ProviderName
+                Status    = "Retrieved"
+            }
+        }
+    }
+    catch {
+        $Result = if ($_.FullyQualifiedErrorId -like "NoMatchingEventsFound*") {
+            "No matching events"
+        }
+        else {
+            "Query Failed: $($_.Exception.Message)"
+        }
+
+        [PSCustomObject]@{
+            Server    = $Server
+            Time      = $null
+            EventID   = $null
+            Severity  = $null
+            Source    = $null
+            Status    = $Result
+        }
+    }
+}
+
+# Display the results
+Write-Host "`nWindows Event Log Report"
+
+$EventReport |
+    Sort-Object Server, Time -Descending |
+    Format-Table -AutoSize
+
+# Export the results
+$EventReportPath = "$env:USERPROFILE\Desktop\Infrastructure-EventReport.csv"
+
+$EventReport |
+    Export-Csv -Path $EventReportPath -NoTypeInformation
+
+Write-Host "Event report exported to $EventReportPath"
