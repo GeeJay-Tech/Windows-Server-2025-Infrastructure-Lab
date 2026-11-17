@@ -102,3 +102,18 @@ No new screenshots or CSV files were uploaded to the repository; results were co
 | CSV export | Both HealthReport and DiskReport export confirmation messages visible on DC01 |
 
 Evidence comes from the user's PowerShell output screenshot during the lab session. The disk-report CSV content was not separately inspected after the saved-script run, and neither CSV nor screenshot has been committed as a separate file. Error-path behaviour for the saved disk-monitoring code remains untested.
+
+### 17 November 2026 — Session 6 remote Event Log validation
+
+| Check | Observed result |
+| --- | --- |
+| Initial `Get-WinEvent` against FS01 | RPC server unavailable |
+| TCP 135 DC01 → FS01 | `TcpTestSucceeded = True` |
+| FS01 EventLog service | Running |
+| FS01 Remote Event Log Management firewall group | All rules initially disabled |
+| Corrective change | Enabled firewall group on FS01 |
+| Original `Get-WinEvent` retest | Success; six DCOM ID 10005 entries retrieved |
+| Restart correlation | Planned restarts recorded at 03:37:25 and 03:41:48; EventLog service stops at 03:40:02 and 03:41:49 |
+| Windows Update service follow-up | `wuauserv` Stopped; insufficient alone to indicate failure |
+
+The remote event-query recovery is verified by the successful retest. The DCOM explanation is consistent with the shutdown events but does not prove update installation success. No Event Log collection has yet been added to the saved health-check script.
