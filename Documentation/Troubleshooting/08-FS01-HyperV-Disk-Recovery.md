@@ -28,7 +28,7 @@ An attempt to change the old VM's disk attachment failed with a rollback error r
 3. Created a new **Generation 2** Hyper-V VM (`FS01-Recovery`) using the copied existing virtual disk, without reinstalling Windows Server.
 4. Booted the recovered installation and confirmed that its guest hostname was `FS01`.
 5. Restored or checked the intended static networking: FS01 `192.168.100.3/24`, gateway `192.168.100.1`, DNS/DC01 `192.168.100.2`.
-6. Continued with a host-level Hyper-V export of the recovered VM; the user confirmed **export completed**. Inspection of exported configuration/disk files and a restore test were not yet reported.
+6. Continued with a host-level Hyper-V export of the recovered VM; the user confirmed **export completed**. The exported files and VM compatibility have since been checked successfully; a booted restore test remains outstanding.
 
 ## Validation and limitations
 
@@ -43,7 +43,10 @@ An attempt to change the old VM's disk attachment failed with a rollback error r
 | Finance share ACL | An inspected NTFS access entry showed `Allow`, but the account/group and effective permissions were not fully validated |
 | Authorised Finance user access | **Not retested** after recovery; password unavailable, CLIENT01 kept off to conserve laptop RAM |
 | Domain secure channel (`Test-ComputerSecureChannel`) | **Not confirmed** |
-| Hyper-V export | **Completed**, per user; contents and restore viability **not yet verified** |
+| Hyper-V export | **Completed**, per user | 
+| Export file inspection | **Pass** — user ran recursive file listing without errors and confirmed completion; individual file details were not supplied |
+| Export compatibility (`Compare-VM`) | **Pass (command completed without errors)** — user confirmed; detailed compatibility output not supplied |
+| Booted restore test | **Not performed** — avoided running a duplicate FS01 on the same lab network |
 
 **Do not interpret an unauthorised account's `Test-Path` result of `False` with `Access is denied` as proof that the SMB share is missing.** It shows the attempted access was refused. An authorised user/NTFS/share-permission test remains outstanding.
 
@@ -58,7 +61,7 @@ An attempt to change the old VM's disk attachment failed with a rollback error r
 
 ## Remaining follow-up
 
-- Inspect the export folder and confirm exported virtual disk and configuration files are present.
+- Export file listing and `Compare-VM` were completed without reported errors on 19 November 2026. Inspect exact file details if needed before relying on this as a disaster-recovery backup.
 - When resources allow, test an isolated restore/import **without connecting a duplicate FS01 to the production lab network**.
 - Confirm `Test-ComputerSecureChannel` and test `\\FS01\Finance` using an authorised domain user.
 - Retain original VHDX/AVHDX files until recovery and backup are validated; only then consider cleanup of old VM registration and stale files.
