@@ -543,3 +543,43 @@ Both export confirmation messages were visible in the script's PowerShell output
 **Limits:** The individual event records/counts from the Session 7 CSV were not provided for review, so no claim is made about particular Event IDs or severity distribution from this execution. The script's no-match and error paths were not separately tested in Session 7. CSV outputs are overwritten each run; there is no scheduling, alerting or historical retention yet. The current output has a per-server 20-event cap and is not a comprehensive audit of every System event.
 
 **Source:** [Test-ServerHealth.ps1](../PowerShell/Test-ServerHealth.ps1), updated with the Session 7 code validated in the lab.
+
+
+### Session 8 — Hyper-V VM Export and Recovery Readiness (19 November 2026)
+
+**Objective:** Export the recovered FS01 virtual machine without modifying its system disk and perform initial verification.
+
+**User-confirmed steps:**
+- Shut down the recovered VM and used `Export-VM` from the Hyper-V host to a directory beneath `D:\Hyper-V-Backups`.
+- User reported that the export completed.
+- Ran a recursive file listing of the export directory without errors.
+- Ran `Compare-VM` against an exported `.vmcx` file without errors.
+- Restarted the working FS01 installation.
+
+**Limit:** No restored VM was imported or booted. This validates file presence and initial compatibility, **not full recovery from the export**.
+
+**Related incident:** [08 — FS01 Hyper-V disk recovery](Troubleshooting/08-FS01-HyperV-Disk-Recovery.md).
+
+### Session 9 — Hyper-V Backup Script with CSV Logging (19 November 2026)
+
+**Objective:** Create a reusable PowerShell script for exporting an offline Hyper-V VM, rejecting unsafe states and logging backup attempts.
+
+**Script:** [`PowerShell/Backup-HyperVVM.ps1`](../PowerShell/Backup-HyperVVM.ps1)  
+**Host path:** `C:\Scripts\Backup-HyperVVM.ps1`  
+**CSV log:** `C:\Scripts\Logs\HyperV-BackupLog.csv`
+
+**Implementation:**
+- Accepts `-VMName` and `-BackupRoot` parameters.
+- Creates timestamped export destinations, checks the VM is **Off**, and invokes `Export-VM`.
+- Checks for exported `.vmcx` and `.vhdx` files after exporting.
+- Appends timestamp, VM name, status, destination and error details using `[PSCustomObject]` and `Export-Csv -Append` in a `finally` block.
+
+**Observed validation:**
+1. First execution was blocked before the script ran by the host's PowerShell execution policy (`PSSecurityException`).
+2. Allowed script execution temporarily for the current PowerShell process.
+3. Ran the script while FS01 was **Running**; the expected warning `VM must be shut down before this backup.` appeared. This was an intentional negative test, not a successful backup.
+4. User confirmed completing the updated logging exercise, including viewing the CSV report. Exact CSV contents were not independently supplied.
+5. The offline success path of the **new script** has **not** been tested; the earlier Session 8 manual export succeeded separately.
+
+**Limitations:** A `Failed` log entry may represent an intentional safety rejection. The post-export file check confirms filenames but not VHDX integrity or recoverability. The script logs in `catch` without explicitly setting a nonzero process exit code, so future scheduled monitoring should not use exit status alone. Backup retention, log-rotation, storage checks, restore testing and task scheduling are not yet implemented.
+
