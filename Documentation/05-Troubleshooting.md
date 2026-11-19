@@ -14,6 +14,8 @@ This index links to individual, evidence-based troubleshooting write-ups from th
 | 3 November 2026 | [06 — CLIENT01 DNS controlled exercise](Troubleshooting/06-CLIENT01-DNS-Controlled-Exercise.md) | Inconclusive: network status changed, but the intended share failure did not occur |
 | 17 November 2026 | [07 — FS01 remote Event Log RPC access](Troubleshooting/07-FS01-Remote-Event-Log-RPC.md) | Resolved; remote event retrieval verified after firewall change |
 
+| 19 November 2026 | [08 — FS01 Hyper-V disk attachment and recovery](Troubleshooting/08-FS01-HyperV-Disk-Recovery.md) | Original Windows installation recovered in a new VM; export completed; Finance permissions and restore validation outstanding |
+
 ## How future cases are documented
 
 New incidents go into separate numbered Markdown files in [the Troubleshooting folder](Troubleshooting), then receive a single entry in the index above. Reports distinguish **simulated incidents** from genuine observed failures and do not claim resolution without supporting validation.
